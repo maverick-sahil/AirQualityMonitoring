@@ -2,6 +2,8 @@ package com.example.airqualitymonitoring
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
@@ -9,7 +11,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.Date
+import java.util.*
 
 class MainActivity : AppCompatActivity(), WebSocketCallback {
 
@@ -77,7 +79,13 @@ class MainActivity : AppCompatActivity(), WebSocketCallback {
             listAirQualityAll.add(airQuality)
         }
         runOnUiThread {
+            if (listAirQualityUnique.size > 0) {
+                findViewById<ProgressBar>(R.id.progressBar).visibility = View.GONE
+            }
             (recyclerAqi.adapter as? AQIAdapter)?.submitList(listAirQualityUnique.toMutableList())
+            if (chartDialogFragment != null) {
+                chartDialogFragment?.setData(listAirQualityAll.filter { it.city == chartDialogFragment?.getCity() })
+            }
         }
     }
 

@@ -13,4 +13,5 @@
     <color name="poor">#B06E21</color>
     <color name="very_poor">#BC2D29</color>
     <color name="severe">#9A2126</color>
+    <color name="transparent_text">#50000000</color>
 </resources>

@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.LimitLine
@@ -25,7 +27,6 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
 
     private lateinit var textCity: TextView
     private lateinit var lineChart: LineChart
-    private var timeCounter: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,10 +44,15 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
         super.onViewCreated(view, savedInstanceState)
         textCity = view.findViewById(R.id.textCity)
         textCity.text = city
+        (view.findViewById(R.id.imageBack) as? ImageButton)?.setOnClickListener { dismissAllowingStateLoss() }
         lineChart = view.findViewById(R.id.lineChart)
         lineChart.setTouchEnabled(true)
         lineChart.setPinchZoom(true)
         renderData()
+    }
+
+    fun getCity(): String {
+        return city
     }
 
     private fun renderData() {
@@ -57,7 +63,7 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
         llXAxis.textSize = 10f
         val xAxis: XAxis = lineChart.xAxis
         xAxis.enableGridDashedLine(10f, 10f, 0f)
-        xAxis.axisMaximum = 100f
+        xAxis.axisMaximum = 50f
         xAxis.axisMinimum = 0f
         xAxis.setDrawLimitLinesBehindData(true)
         val ll1 = LimitLine(300f, "Severe")
@@ -65,11 +71,13 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
         ll1.enableDashedLine(10f, 10f, 0f)
         ll1.labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
         ll1.textSize = 10f
+        ll1.textColor = ContextCompat.getColor(requireContext(), R.color.transparent_text)
         val ll2 = LimitLine(201f, "Poor")
         ll2.lineWidth = 4f
         ll2.enableDashedLine(10f, 10f, 0f)
         ll2.labelPosition = LimitLine.LimitLabelPosition.RIGHT_BOTTOM
         ll2.textSize = 10f
+        ll2.textColor = ContextCompat.getColor(requireContext(), R.color.transparent_text)
         val leftAxis: YAxis = lineChart.axisLeft
         leftAxis.removeAllLimitLines()
         leftAxis.addLimitLine(ll1)
@@ -81,12 +89,17 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
         leftAxis.setDrawLimitLinesBehindData(false)
         lineChart.axisRight.isEnabled = false
         lineChart.setVisibleXRangeMaximum(10f)
-        setData()
+        setData(listAirQuality)
     }
 
-    fun setData() {
+    fun setData(listAirQuality: List<AirQuality>) {
+        val listFilteredAirQuality = if(listAirQuality.size > 50)
+            listAirQuality.subList((listAirQuality.size - 50).coerceAtLeast(0), listAirQuality.size)
+        else
+            listAirQuality
         val values: ArrayList<Entry> = ArrayList()
-        listAirQuality.map {
+        var timeCounter = 0
+        listFilteredAirQuality.map {
             values.add(Entry(timeCounter++.toFloat(), it.aqi))
         }
         val set1: LineDataSet
@@ -97,6 +110,7 @@ class ChartDialogFragment(private val city: String, private val listAirQuality: 
             set1.values = values
             lineChart.data.notifyDataChanged()
             lineChart.notifyDataSetChanged()
+            lineChart.invalidate()
         } else {
             set1 = LineDataSet(values, "AQI")
             set1.setDrawIcons(false)
